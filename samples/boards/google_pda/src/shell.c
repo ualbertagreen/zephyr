@@ -132,7 +132,7 @@ static int cmd_role(const struct shell *shell, size_t argc, char**argv, void* da
 }
 
 SHELL_SUBCMD_DICT_SET_CREATE(role_options, cmd_role,
-        (sink, SINK_BIT), (source, 0)
+        (sink, SINK_BIT, "sink"), (source, 0, "source")
 );
 
 SHELL_CMD_REGISTER(role, &role_options, "Sets role as sink or source", cmd_role);
@@ -154,11 +154,11 @@ static int cmd_cc2_pull(const struct shell *shell, size_t argc, char**argv, void
 }
 
 SHELL_SUBCMD_DICT_SET_CREATE(cc1_options, cmd_cc1_pull,
-        (rd, 0), (ru, 1), (r1, 2), (r3, 3)
+        (rd, 0, "resistor disconnected"), (ru, 1, "default resistor"), (r1, 2, "1.5A resistor"), (r3, 3, "3A resistor")
 );
 
 SHELL_SUBCMD_DICT_SET_CREATE(cc2_options, cmd_cc2_pull,
-        (rd, 0), (ru, 1), (r1, 2), (r3, 3)
+        (rd, 0, "resistor disconnected"), (ru, 1, "default resistor"), (r1, 2, "1.5A resistor"), (r3, 3, "3A resistor")
 );
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_rpull,
@@ -178,7 +178,7 @@ static int cmd_output(const struct shell *shell, size_t argc, char**argv, void* 
 }
 
 SHELL_SUBCMD_DICT_SET_CREATE(output_options, cmd_output,
-        (cont, true), (pd_only, false)
+        (cont, true, "continuous output"), (pd_only, false, "output only on receiving pd messages")
 );
 
 SHELL_CMD_REGISTER(output, &output_options, "Sets console output as continuous or only on receiving PD messages", cmd_output);

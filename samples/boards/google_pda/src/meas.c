@@ -29,12 +29,6 @@ static const struct adc_dt_spec adc_vcon_c = ADC_DT_SPEC_GET(VCON_C_MEAS_NODE);
 #define ADC_ACQUISITION_TIME    ADC_ACQ_TIME_DEFAULT
 #define ADC_REF_MV              3300
 
-/*shunt resistor and voltage amplifier for current sensors on Twinkie*/
-#define VBUS_C_R_MOHM 3
-#define VBUS_C_GAIN 100
-#define VCON_C_R_MOHM 10
-#define VCON_C_GAIN 25
-
 int meas_vbus_v(int32_t *v)
 {
 	int ret;
@@ -95,7 +89,7 @@ int meas_vbus_c(int32_t *c)
 	 * in milliohms to keep everything as an integer.
 	 * mathematically equivalent to dividing by ohms directly.
 	 */
-	*c = (*c - ADC_REF_MV / 2) * 1000 / VBUS_C_R_MOHM / VBUS_C_GAIN;
+	*c = (*c - ADC_REF_MV / 2) * 1000 / DT_PROP(VBUS_C_MEAS_NODE, shunt_resistor_mohms) / DT_PROP(VBUS_C_MEAS_NODE, gain);
 
 	return 0;
 }
@@ -191,7 +185,7 @@ int meas_vcon_c(int32_t *c)
 	 * in milliohms to keep everything as an integer
 	 * mathematically equivalent to dividing by ohms directly.
 	 */
-	*c = *c * 1000 / VCON_C_R_MOHM / VCON_C_GAIN;
+	*c = *c * 1000 / DT_PROP(VCON_C_MEAS_NODE, shunt_resistor_mohms) / DT_PROP(VCON_C_MEAS_NODE, gain);
 
 	return 0;
 }

@@ -79,17 +79,18 @@
 	};
 
 	vbus_c: vbusc {
-                compatible = "voltage-divider";
+                compatible = "shunt-sensor";
 		io-channels = <&adc1 17>;
-		output-ohms = <49900>;
-		full-ohms = <(330000 + 49900)>;
+		shunt-resistor-mohms = <3>;
+		gain = <100>;
                 label = "VBUS_C";
 	};
 
 	vcon_c: vconc {
-                compatible = "voltage-divider";
+                compatible = "shunt-sensor";
 		io-channels = <&adc1 18>;
-		output-ohms = <0>;
+		shunt-resistor-mohms = <10>;
+		gain = <25>;
                 label = "VCON_C";
 	};
 

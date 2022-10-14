@@ -1,0 +1,28 @@
+# Copyright 2023 The ChromiumOS Authors
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+    Description for a current sensor measured using a shunt resistor and
+    parallel voltmeter.
+
+compatible: "shunt-sensor"
+
+include: base.yaml
+
+properties:
+  io-channels:
+    required: true
+    description: |
+      Channels available with this divider configuration.
+
+  shunt-resistor-mohms:
+    type: int
+    required: true
+    description: |
+      Resistance of the shunt resistor in milli-ohms
+
+  gain:
+    type: int
+    default: 1
+    description: |
+      Gain used to amplify the voltage measured across the shunt resistor.

@@ -170,7 +170,7 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 			 * source to source connection and the twinkie is set as
 			 * a sink, the twinkie UCPD will incorrectly detect a
 			 * valid connection. So the connection has to be
-			 * detected using the ADC pin.
+			 * detected using the ADC pins.
 			 */
 			if ((cc1_v < CC_VOLTAGE_HIGH) && (cc1_v > CC_VOLTAGE_LOW)) {
 				/*connect to non-active line if the active line is not set to view*/
