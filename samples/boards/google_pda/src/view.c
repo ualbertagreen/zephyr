@@ -323,7 +323,7 @@ int view_init(void)
 
 	view_obj.flags = ATOMIC_INIT(0);
 
-        return 0;
+	return 0;
 }
 
 void main(void)
@@ -333,7 +333,20 @@ void main(void)
 	if (usb_enable(NULL)) {
 		return;
 	}
+/*
+	const struct device *dev;
+	uint32_t dtr = 0;
 
+	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
+	if (!device_is_ready(dev) || usb_enable(NULL)) {
+		return;
+	}
+
+	while (!dtr) {
+		uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+		k_sleep(K_MSEC(100));
+	}
+*/
 	meas_init();
 	controls_init();
 	model_init(dev_pd_analyzer);

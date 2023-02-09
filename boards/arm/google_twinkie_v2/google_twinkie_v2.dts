@@ -15,8 +15,6 @@
 	chosen {
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
-		zephyr,shell_uart = &cdc_acm_uart0;
-		zephyr,console = &cdc_acm_uart1;
 	};
 
 	leds {
@@ -34,19 +32,6 @@
 			label = "LED_BLUE";
 		};
 	};
-
-        cc_config {
-		compatible = "gpio-leds";
-		cc1_en: cc1en {
-			gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
-			label = "CC1_EN";
-		};
-
-		cc2_en: cc2en {
-			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
-			label = "CC2_EN";
-		};
-        };
 
 	gpio_keys {
 		compatible = "gpio-keys";
@@ -177,22 +162,4 @@
 	hbitclkdiv = <27>;
 	pinctrl-0 = <&ucpd1_cc1_pa8 &ucpd1_cc2_pb15>;
 	pinctrl-names = "default";
-};
-
-zephyr_udc0: &usb {
-	/* Twinkie V2 Command Shell */
-	cdc_acm_uart0: cdc_acm_uart0 {
-		compatible = "zephyr,cdc-acm-uart";
-		label = "CDC_ACM_0";
-	};
-
-	/* Twinkie V2 Packet Logging */
-	cdc_acm_uart1: cdc_acm_uart1 {
-		compatible = "zephyr,cdc-acm-uart";
-		label = "CDC_ACM_1";
-	};
-
-	pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
-	pinctrl-names = "default";
-	status = "okay";
 };

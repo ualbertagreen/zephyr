@@ -23,6 +23,8 @@
 #include "view.h"
 #include "model.h"
 
+#include "LL_UCPD_PATCH.h"
+
 /* STM32 interrupt registers */
 #define UCPD_IRQ		8
 #define DMA1_CHANNEL1_IRQ	9
@@ -37,7 +39,7 @@
 static LL_UCPD_InitTypeDef ucpd_params;
 
 /* Byte size of various portions of the packet */
-#define MOD_BUFFERS 20
+#define MOD_BUFFERS 40
 #define PACKET_HEADER_LEN 20
 #define PD_SAMPLES 488
 #define PACKET_BYTE_SIZE (PACKET_HEADER_LEN + PD_SAMPLES)
@@ -161,8 +163,8 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 			meas_vbus_v(&vbus_v);
 			meas_vbus_c(&vbus_c);
 			meas_cc1_v(&cc1_v);
-       			meas_cc2_v(&cc2_v);
-       			meas_vcon_c(&vcon_c);
+			meas_cc2_v(&cc2_v);
+			meas_vcon_c(&vcon_c);
 
 			/* because the twinkie itself is a port, detecting a
 			 * valid connection through the UCPD line will cause
