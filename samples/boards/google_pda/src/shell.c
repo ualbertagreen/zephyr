@@ -68,7 +68,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char**argv) {
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Twinkie version 2.1.1");
+	shell_print(shell, "Twinkie version 2.1.2");
 
 	return 0;
 }
@@ -76,10 +76,10 @@ static int cmd_version(const struct shell *shell, size_t argc, char**argv) {
 SHELL_CMD_REGISTER(version, NULL, "Show Twinkie version", cmd_version);
 
 static int cmd_reset(const struct shell *shell, size_t argc, char**argv) {
+	start_snooper(false);
 	reset_snooper();
 	usb_dc_reset();
 
-	start_snooper(false);
 	start_snooper(true);
 	return 0;
 }
@@ -118,6 +118,7 @@ SHELL_CMD_REGISTER(start, NULL, "Start snooper", cmd_start);
 
 static int cmd_stop(const struct shell *shell, size_t argc, char**argv)
 {
+	usb_dc_reset();
 	start_snooper(false);
 	return 0;
 }

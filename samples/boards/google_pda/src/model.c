@@ -208,6 +208,9 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 				sm->packet.header.packet_type = sm->sop[sm->mr];
 				sm->packet.header.data_len = sm->mod_size[sm->mr];
 				memcpy(sm->packet.data, sm->mod_buff[sm->mr], sm->mod_size[sm->mr]);
+				memset((uint8_t *)&sm->sop[sm->mr], 0, sizeof(uint16_t));
+				sm->mod_size[sm->mr] = 0;
+				memset(sm->mod_buff[sm->mr], 0, PD_SAMPLES);
 				sm->mr++;
 				if (sm->mr == MOD_BUFFERS) {
 					sm->mr = 0;
@@ -250,7 +253,7 @@ void ucpd_isr(void)
 		memcpy(sm->mod_buff[sm->mw], sm->dma_buffer, PD_SAMPLES);
 		sm->mod_size[sm->mw] = LL_UCPD_ReadRxPaySize(UCPD1);
 		sm->sop[sm->mr].type = LL_UCPD_ReadRxOrderSet(UCPD1);
-                sm->sop[sm->mw].polarity = pd_line;
+		sm->sop[sm->mw].polarity = pd_line;
 		sm->sop[sm->mw].partial = true;
 		sm->mw++;
 		if (sm->mw == MOD_BUFFERS) {
@@ -314,7 +317,7 @@ static void pd_on_cc(enum pd_cc_t p)
 
 int model_init(const struct device *dev)
 {
-        int ret;
+	int ret;
 
 	model.dev = dev;
 	model.mw = 0;
@@ -336,6 +339,8 @@ int model_init(const struct device *dev)
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
 	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
+
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_1, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
 	/* DMA from UCPD RXDR register */
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1, (uint32_t)&UCPD1->RXDR, (uint32_t)model.dma_buffer, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
@@ -376,7 +381,7 @@ int model_init(const struct device *dev)
 	 *       clock API should be used to enable clocks.
 	 */
 	ret = LL_UCPD_Init(UCPD1, &ucpd_params);
-        if (ret == SUCCESS) {
+	if (ret == SUCCESS) {
 		/* ORDSET */
 		LL_UCPD_SetRxOrderSet(UCPD1, LL_UCPD_ORDERSET_SOP |
 					     LL_UCPD_ORDERSET_SOP1 |
