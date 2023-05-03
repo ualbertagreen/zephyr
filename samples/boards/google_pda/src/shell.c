@@ -68,7 +68,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char**argv) {
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Twinkie version 2.1.2");
+	shell_print(shell, "Twinkie version 2.1.3");
 
 	return 0;
 }
@@ -171,15 +171,25 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_rpull,
 SHELL_CMD_REGISTER(rpull, &sub_rpull, "Place pull resistor", NULL);
 
 static int cmd_output(const struct shell *shell, size_t argc, char**argv, void* data) {
-	bool p = (bool) data;
+	int p = (int) data;
 
-	set_empty_print(p);
+	switch (p) {
+		case 0:
+		case 1:
+			set_slow_print(false);
+			set_empty_print(p);
+			break;
+		case 2:
+			set_slow_print(true);
+			set_empty_print(true);
+			break;
+		}
 
 	return 0;
 }
 
 SHELL_SUBCMD_DICT_SET_CREATE(output_options, cmd_output,
-        (cont, true, "continuous output"), (pd_only, false, "output only on receiving pd messages")
+        (cont, 1, "continuous output"), (pd_only, 0, "output only on receiving pd messages"), (slow, 2, "slow output when no pd messages are recieved")
 );
 
 SHELL_CMD_REGISTER(output, &output_options, "Sets console output as continuous or only on receiving PD messages", cmd_output);

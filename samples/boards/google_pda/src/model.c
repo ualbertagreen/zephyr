@@ -58,12 +58,12 @@ struct packet_type_t {
 /* container for header of the packet */
 struct header_t {
 	uint32_t sequence;
-        uint16_t cc1_voltage;
-        uint16_t cc2_voltage;
-        uint16_t vcon_current;
-        uint16_t vbus_voltage;
-        uint16_t vbus_current;
-        struct packet_type_t packet_type;
+	uint16_t cc1_voltage;
+	uint16_t cc2_voltage;
+	uint16_t vcon_current;
+	uint16_t vbus_voltage;
+	uint16_t vbus_current;
+	struct packet_type_t packet_type;
 	uint16_t data_len;
 	uint16_t unused;
 };
@@ -83,6 +83,7 @@ static struct model_t {
 	k_tid_t tid;
 	bool start;
 	bool empty_print;
+	bool slow_print;
 
 	uint8_t mod_buff[MOD_BUFFERS][PD_SAMPLES];
 	uint16_t mod_size[MOD_BUFFERS];
@@ -99,6 +100,7 @@ void start_snooper(bool s)
 {
 	model.start = s;
 	model.empty_print = s;
+	model.slow_print = false;
 	if (s) {
 		model.packet.header.sequence = 0;
 		view_set_snoop(CC1_CHANNEL_BIT | CC2_CHANNEL_BIT);
@@ -146,6 +148,10 @@ void set_role(snooper_mask_t role_mask) {
 
 void set_empty_print(bool e) {
 	model.empty_print = e;
+}
+
+void set_slow_print(bool s) {
+	model.slow_print = s;
 }
 
 #define CC_VOLTAGE_LOW   500
@@ -225,10 +231,18 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 					uart_fifo_fill(sm->dev, (const uint8_t *)&sm->packet + i, MAX_PACKET_XFER_SIZE);
 				}
 			}
-			sm->packet.header.data_len = 0;
 			memset(sm->packet.data, 0, PD_SAMPLES);
+			sm->packet.header.data_len = 0;
 		}
-		k_usleep(500);
+		if (sm->mw == sm->mr && sm->slow_print)
+		{
+			k_usleep(100000);
+		}
+		else
+		{
+			k_usleep(500);
+		}
+
 	}
 }
 
@@ -246,11 +260,12 @@ void ucpd_isr(void)
 		LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
 		LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
 	}
-
+/*
 	if (LL_UCPD_IsActiveFlag_RxErr(UCPD1)) {
 		LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
 		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, PD_SAMPLES);
 		memcpy(sm->mod_buff[sm->mw], sm->dma_buffer, PD_SAMPLES);
+		memset(sm->dma_buffer, 0, PD_SAMPLES);
 		sm->mod_size[sm->mw] = LL_UCPD_ReadRxPaySize(UCPD1);
 		sm->sop[sm->mr].type = LL_UCPD_ReadRxOrderSet(UCPD1);
 		sm->sop[sm->mw].polarity = pd_line;
@@ -262,15 +277,16 @@ void ucpd_isr(void)
 		LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
 		k_wakeup(sm->tid);
 	}
-
+*/
 	if (LL_UCPD_IsActiveFlag_RxMsgEnd(UCPD1)) {
 		LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
 		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, PD_SAMPLES);
 		memcpy(sm->mod_buff[sm->mw], sm->dma_buffer, PD_SAMPLES);
+		memset(sm->dma_buffer, 0, PD_SAMPLES);
+		sm->mod_size[sm->mw] = LL_UCPD_ReadRxPaySize(UCPD1);
 		sm->sop[sm->mr].type = LL_UCPD_ReadRxOrderSet(UCPD1);
 		sm->sop[sm->mw].polarity = pd_line;
 		sm->sop[sm->mw].partial = false;
-		sm->mod_size[sm->mw] = LL_UCPD_ReadRxPaySize(UCPD1);
 		sm->mw++;
 		if (sm->mw == MOD_BUFFERS) {
 			sm->mw = 0;
@@ -385,11 +401,11 @@ int model_init(const struct device *dev)
 		/* ORDSET */
 		LL_UCPD_SetRxOrderSet(UCPD1, LL_UCPD_ORDERSET_SOP |
 					     LL_UCPD_ORDERSET_SOP1 |
-					     LL_UCPD_RXORDSET_SOP2 |
-					     LL_UCPD_ORDERED_SET_HARD_RESET |
-					     LL_UCPD_RXORDSET_SOP1_DEBUG |
-					     LL_UCPD_RXORDSET_SOP2_DEBUG |
-					     LL_UCPD_RXORDSET_CABLE_RESET);
+					     LL_UCPD_ORDERSET_SOP2 |
+//					     LL_UCPD_ORDERSET_SOP1_DEBUG |
+//					     LL_UCPD_ORDERSET_SOP2_DEBUG |
+					     LL_UCPD_ORDERSET_HARDRST |
+					     LL_UCPD_ORDERSET_CABLERST);
 
 		/* ENABLE DMA */
 		LL_UCPD_RxDMAEnable(UCPD1);

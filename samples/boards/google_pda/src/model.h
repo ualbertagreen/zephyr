@@ -46,6 +46,13 @@ void start_snooper(bool s);
 void set_empty_print(bool e);
 
 /**
+ * @brief Sets how fast the twinkie will output data when no pd messages are received
+ *
+ * @param s true for slow output, false for fast output
+ */
+void set_slow_print(bool s);
+
+/**
  * @brief Used only for sharing isr
  */
 void ucpd_isr(void);
