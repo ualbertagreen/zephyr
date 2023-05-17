@@ -42,7 +42,8 @@ static LL_UCPD_InitTypeDef ucpd_params;
 #define MOD_BUFFERS 40
 #define PACKET_HEADER_LEN 20
 #define PD_SAMPLES 488
-#define PACKET_BYTE_SIZE (PACKET_HEADER_LEN + PD_SAMPLES)
+#define CRC_LEN 4
+#define PACKET_BYTE_SIZE (PACKET_HEADER_LEN + PD_SAMPLES + CRC_LEN)
 #define MAX_PACKET_XFER_SIZE 64
 
 /* container for information of the type of packet to be sent */
@@ -110,6 +111,11 @@ void start_snooper(bool s)
 }
 
 void reset_snooper() {
+	memset(&model.mod_buff, 0, MOD_BUFFERS * PD_SAMPLES);
+	memset(&model.mod_size, 0, MOD_BUFFERS * sizeof(uint16_t));
+	memset(&model.sop, 0, MOD_BUFFERS * sizeof(uint16_t));
+	model.mr = 0;
+	model.mw = 0;
 	model.packet.header.sequence = 0;
 }
 
@@ -227,8 +233,19 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 			crc32_hash((uint8_t *)&sm->packet, 508);
 			sm->packet.crc = crc32_result();
 			if (sm->empty_print || sm->packet.header.data_len != 0) {
-				for (int i = 0; i < PACKET_BYTE_SIZE; i += MAX_PACKET_XFER_SIZE) {
-					uart_fifo_fill(sm->dev, (const uint8_t *)&sm->packet + i, MAX_PACKET_XFER_SIZE);
+				int stop_timer = 0;
+				for (int i = 0, w = 0; i < PACKET_BYTE_SIZE; i += w) {
+					w = uart_fifo_fill(sm->dev, (const uint8_t *)&sm->packet + i, PACKET_BYTE_SIZE - i);
+					if (w <= 0) {
+						stop_timer++;
+						k_usleep(500);
+//						LOG_ERR("ERROR: No receiver connected. Twinkie turning off.");
+						if (stop_timer > 100)
+						{
+							start_snooper(false);
+							break;
+						}
+					}
 				}
 			}
 			memset(sm->packet.data, 0, PD_SAMPLES);
@@ -292,7 +309,7 @@ void ucpd_isr(void)
 			sm->mw = 0;
 		}
 		LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
-		k_wakeup(sm->tid);
+//		k_wakeup(sm->tid);
 		LL_UCPD_ClearFlag_RxMsgEnd(UCPD1);
 	}
 }

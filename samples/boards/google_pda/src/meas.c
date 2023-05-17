@@ -49,7 +49,7 @@ int meas_vbus_v(int32_t *v)
 	}
 
 	*v = sample_buffer;
-	ret = adc_raw_to_millivolts(5000, ADC_GAIN, ADC_RESOLUTION, v);
+	ret = adc_raw_to_millivolts(ADC_REF_MV, ADC_GAIN, ADC_RESOLUTION, v);
 	if (ret != 0) {
 		return ret;
 	}
@@ -80,7 +80,7 @@ int meas_vbus_c(int32_t *c)
 	}
 
 	*c = sample_buffer;
-	ret = adc_raw_to_millivolts(5000, ADC_GAIN, ADC_RESOLUTION, c);
+	ret = adc_raw_to_millivolts(ADC_REF_MV, ADC_GAIN, ADC_RESOLUTION, c);
 	if (ret != 0) {
 		return ret;
 	}
