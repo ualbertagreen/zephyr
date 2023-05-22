@@ -55,7 +55,7 @@ int meas_vbus_v(int32_t *v)
 	}
 
 	/* voltage scaled by voltage divider values using DT binding */
-	*v = *v * DT_PROP(VBUS_V_MEAS_NODE, full_ohms) / DT_PROP(VBUS_V_MEAS_NODE, output_ohms);
+	*v = *v * DT_PROP(VBUS_V_MEAS_NODE, full_ohms) / DT_PROP(VBUS_V_MEAS_NODE, output_ohms) /4 *5;
 
 	return 0;
 }

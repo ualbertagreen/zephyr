@@ -68,7 +68,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char**argv) {
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Twinkie version 2.1.6");
+	shell_print(shell, "Twinkie version 2.1.7");
 
 	return 0;
 }
