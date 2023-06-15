@@ -68,7 +68,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char**argv) {
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Twinkie version 2.1.8");
+	shell_print(shell, "Twinkie version 2.1.9");
 
 	return 0;
 }
@@ -193,3 +193,17 @@ SHELL_SUBCMD_DICT_SET_CREATE(output_options, cmd_output,
 );
 
 SHELL_CMD_REGISTER(output, &output_options, "Sets console output as continuous or only on receiving PD messages", cmd_output);
+
+static int cmd_auto_stop(const struct shell *shell, size_t argc, char**argv, void* data) {
+	bool p = (bool) data;
+
+	set_auto_stop(p);
+
+	return 0;
+}
+
+SHELL_SUBCMD_DICT_SET_CREATE(cmd_auto_stop_options, cmd_auto_stop,
+        (on, true, "twinkie turns off when no reciever is connected"), (off, false, "twinkie continues printing even when messages are not being received (warning may cause data corruption or desync)")
+);
+
+SHELL_CMD_REGISTER(auto_stop, &cmd_auto_stop_options, "Sets to automatically turn off when no valid receiver is connected", cmd_auto_stop);

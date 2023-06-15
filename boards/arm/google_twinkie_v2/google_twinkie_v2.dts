@@ -45,14 +45,12 @@
                 compatible = "voltage-divider";
 		io-channels = <&adc1 1>;
 		output-ohms = <0>;
-                label = "CC1_BUF";
 	};
 
 	cc2_buf: cc2buf {
                 compatible = "voltage-divider";
 		io-channels = <&adc1 3>;
 		output-ohms = <0>;
-                label = "CC2_BUF";
 	};
 
 	vbus_v: vbusv {
@@ -60,7 +58,6 @@
 		io-channels = <&adc1 15>;
 		output-ohms = <68000>;
 		full-ohms = <(2000000 + 68000)>;
-                label = "VBUS_V";
 	};
 
 	vbus_c: vbusc {
@@ -68,7 +65,6 @@
 		io-channels = <&adc1 17>;
 		shunt-resistor-mohms = <3>;
 		gain = <100>;
-                label = "VBUS_C";
 	};
 
 	vcon_c: vconc {
@@ -76,7 +72,6 @@
 		io-channels = <&adc1 18>;
 		shunt-resistor-mohms = <10>;
 		gain = <25>;
-                label = "VCON_C";
 	};
 
 
@@ -97,15 +92,63 @@
 
 
 &adc1 {
-        pinctrl-0 = <&adc1_in1_pa1	/* CC1_BUF	 */
+	pinctrl-0 = <&adc1_in1_pa1	/* CC1_BUF	 */
 		     &adc1_in3_pa3	/* CC2_BUF	 */
 		     &adc1_in15_pb11	/* VBUS_READ_BUF */
 		     &adc1_in17_pc4	/* CSA_VBUS	 */
 		     &adc1_in18_pc5	/* CSA_CC2	 */
 		    >;
 
-        pinctrl-names = "default";
-        status = "okay";
+	pinctrl-names = "default";
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@1 {
+		reg = <1>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,vref-mv = <3300>;
+	};
+
+	channel@3 {
+		reg = <3>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,vref-mv = <3300>;
+	};
+
+	channel@15 {
+		reg = <15>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,vref-mv = <3300>;
+	};
+
+	channel@17 {
+		reg = <17>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,vref-mv = <3300>;
+	};
+
+	channel@18 {
+		reg = <18>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,vref-mv = <3300>;
+	};
 };
 
 &clk_hsi {

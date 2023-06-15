@@ -53,6 +53,13 @@ void set_empty_print(bool e);
 void set_slow_print(bool s);
 
 /**
+ * @brief Sets whether twinkie automatically turns off when no receiver is connected.
+ *
+ * @param s true for auto stop, false for continuous output
+ */
+void set_auto_stop(bool s);
+
+/**
  * @brief Used only for sharing isr
  */
 void ucpd_isr(void);

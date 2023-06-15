@@ -85,6 +85,7 @@ static struct model_t {
 	bool start;
 	bool empty_print;
 	bool slow_print;
+	bool auto_stop;
 
 	uint8_t mod_buff[MOD_BUFFERS][PD_SAMPLES];
 	uint16_t mod_size[MOD_BUFFERS];
@@ -100,8 +101,6 @@ static int pd_line;
 void start_snooper(bool s)
 {
 	model.start = s;
-	model.empty_print = s;
-	model.slow_print = false;
 	if (s) {
 		model.packet.header.sequence = 0;
 		view_set_snoop(CC1_CHANNEL_BIT | CC2_CHANNEL_BIT);
@@ -158,6 +157,10 @@ void set_empty_print(bool e) {
 
 void set_slow_print(bool s) {
 	model.slow_print = s;
+}
+
+void set_auto_stop(bool s) {
+	model.auto_stop = s;
 }
 
 #define CC_VOLTAGE_LOW   500
@@ -240,7 +243,7 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 						stop_timer++;
 						k_usleep(500);
 //						LOG_ERR("ERROR: No receiver connected. Twinkie turning off.");
-						if (stop_timer > 100)
+						if (stop_timer > 100 && sm->auto_stop)
 						{
 							start_snooper(false);
 							break;
@@ -277,7 +280,7 @@ void ucpd_isr(void)
 		LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
 		LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
 	}
-/*
+
 	if (LL_UCPD_IsActiveFlag_RxErr(UCPD1)) {
 		LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
 		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, PD_SAMPLES);
@@ -294,7 +297,7 @@ void ucpd_isr(void)
 		LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
 		k_wakeup(sm->tid);
 	}
-*/
+
 	if (LL_UCPD_IsActiveFlag_RxMsgEnd(UCPD1)) {
 		LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
 		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, PD_SAMPLES);
@@ -455,6 +458,10 @@ int model_init(const struct device *dev)
 
 	en_cc1(true);
 	en_cc2(true);
+
+	set_auto_stop(true);
+	set_empty_print(true);
+	set_slow_print(false);
 
 	//crc32_init();
 
