@@ -22,13 +22,6 @@ static const struct adc_dt_spec adc_vbus_v = ADC_DT_SPEC_GET(VBUS_V_MEAS_NODE);
 static const struct adc_dt_spec adc_vbus_c = ADC_DT_SPEC_GET(VBUS_C_MEAS_NODE);
 static const struct adc_dt_spec adc_vcon_c = ADC_DT_SPEC_GET(VCON_C_MEAS_NODE);
 
-/* Standard Settings for ADCs the STM32 ADC */
-#define ADC_RESOLUTION          12
-#define ADC_GAIN                ADC_GAIN_1
-#define ADC_REFERENCE           ADC_REF_INTERNAL
-#define ADC_ACQUISITION_TIME    ADC_ACQ_TIME_DEFAULT
-#define ADC_REF_MV              3300
-
 int meas_vbus_v(int32_t *v)
 {
 	int ret;
@@ -93,8 +86,6 @@ int meas_vbus_c(int32_t *c)
 	 * mathematically equivalent to dividing by ohms directly.
 	 */
 	*c = (*c - adc_vbus_c.vref_mv / 2) * 1000 / DT_PROP(VBUS_C_MEAS_NODE, shunt_resistor_mohms) / DT_PROP(VBUS_C_MEAS_NODE, gain);
-
-//	*c = (*c - 236) * 0.9;
 
 	return 0;
 }

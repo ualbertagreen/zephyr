@@ -421,7 +421,9 @@ int model_init(const struct device *dev)
 		/* ORDSET */
 		LL_UCPD_SetRxOrderSet(UCPD1, LL_UCPD_ORDERSET_SOP |
 					     LL_UCPD_ORDERSET_SOP1 |
+//					     LL_UCPD_RXORDSET_SOP1 |
 					     LL_UCPD_ORDERSET_SOP2 |
+//					     LL_UCPD_RXORDSET_SOP2 |
 //					     LL_UCPD_ORDERSET_SOP1_DEBUG |
 //					     LL_UCPD_ORDERSET_SOP2_DEBUG |
 					     LL_UCPD_ORDERSET_HARDRST |
