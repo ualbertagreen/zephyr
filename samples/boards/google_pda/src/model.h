@@ -50,7 +50,7 @@ void set_empty_print(bool e);
  *
  * @param s true for slow output, false for fast output
  */
-void set_slow_print(bool s);
+void set_sleep_time(uint32_t st);
 
 /**
  * @brief Sets whether twinkie automatically turns off when no receiver is connected.

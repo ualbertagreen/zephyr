@@ -92,6 +92,7 @@ static struct model_t {
 	struct packet_type_t sop[MOD_BUFFERS];
 	uint8_t mw;
 	uint8_t mr;
+	uint32_t sleep_time;
 } model;
 
 K_THREAD_STACK_DEFINE(model_stack_area, MODEL_THREAD_STACK_SIZE);
@@ -155,8 +156,8 @@ void set_empty_print(bool e) {
 	model.empty_print = e;
 }
 
-void set_slow_print(bool s) {
-	model.slow_print = s;
+void set_sleep_time(uint32_t st) {
+	model.sleep_time = st;
 }
 
 void set_auto_stop(bool s) {
@@ -175,94 +176,93 @@ static void model_thread(void *arg1, void *arg2, void *arg3)
 
 	while (1) {
 		if (sm->start) {
-			meas_vbus_v(&vbus_v);
-			meas_vbus_c(&vbus_c);
-			meas_cc1_v(&cc1_v);
-			meas_cc2_v(&cc2_v);
-			meas_vcon_c(&vcon_c);
-
-			/* because the twinkie itself is a port, detecting a
-			 * valid connection through the UCPD line will cause
-			 * false positives. e.g. if the line being snooped is a
-			 * source to source connection and the twinkie is set as
-			 * a sink, the twinkie UCPD will incorrectly detect a
-			 * valid connection. So the connection has to be
-			 * detected using the ADC pins.
-			 */
-			if ((cc1_v < CC_VOLTAGE_HIGH) && (cc1_v > CC_VOLTAGE_LOW)) {
-				/*connect to non-active line if the active line is not set to view*/
-				if (get_view_snoop() & CC1_CHANNEL_BIT)
-					LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC1);
-				else
-					LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC2);
-				view_set_connection(CC1_CHANNEL_BIT);
-				pd_line = 1;
-			}
-			else if ((cc2_v < CC_VOLTAGE_HIGH) && (cc2_v > CC_VOLTAGE_LOW)) {
-				/*connect to non-active line if the active line is not set to view*/
-				if (get_view_snoop() & CC2_CHANNEL_BIT)
-					LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC2);
-				else
-					LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC1);
-				view_set_connection(CC2_CHANNEL_BIT);
-				pd_line = 2;
-			}
-			else {
-				view_set_connection(0);
-			}
-
 			sm->packet.header.sequence++;
-			sm->packet.header.vbus_voltage = vbus_v;
-			sm->packet.header.vbus_current = vbus_c;
-			sm->packet.header.cc1_voltage = cc1_v;
-			sm->packet.header.cc2_voltage = cc2_v;
-			sm->packet.header.vcon_current = vcon_c;
 
-			/* put pd message in the packet if any are stored */
-			if (sm->mw != sm->mr) {
-				sm->packet.header.packet_type = sm->sop[sm->mr];
-				sm->packet.header.data_len = sm->mod_size[sm->mr];
-				memcpy(sm->packet.data, sm->mod_buff[sm->mr], sm->mod_size[sm->mr]);
-				memset((uint8_t *)&sm->sop[sm->mr], 0, sizeof(uint16_t));
-				sm->mod_size[sm->mr] = 0;
-				memset(sm->mod_buff[sm->mr], 0, PD_SAMPLES);
-				sm->mr++;
-				if (sm->mr == MOD_BUFFERS) {
-					sm->mr = 0;
+			if (sm->packet.header.sequence % 10 == 0) {
+				meas_vbus_v(&vbus_v);
+				meas_vbus_c(&vbus_c);
+				meas_cc1_v(&cc1_v);
+				meas_cc2_v(&cc2_v);
+				meas_vcon_c(&vcon_c);
+
+				/* because the twinkie itself is a port, detecting a
+				 * valid connection through the UCPD line will cause
+				 * false positives. e.g. if the line being snooped is a
+				 * source to source connection and the twinkie is set as
+				 * a sink, the twinkie UCPD will incorrectly detect a
+				 * valid connection. So the connection has to be
+				 * detected using the ADC pins.
+				 */
+				if ((cc1_v < CC_VOLTAGE_HIGH) && (cc1_v > CC_VOLTAGE_LOW)) {
+					/*connect to non-active line if the active line is not set to view*/
+					if (get_view_snoop() & CC1_CHANNEL_BIT)
+						LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC1);
+					else
+						LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC2);
+					view_set_connection(CC1_CHANNEL_BIT);
+					pd_line = 1;
+				}
+				else if ((cc2_v < CC_VOLTAGE_HIGH) && (cc2_v > CC_VOLTAGE_LOW)) {
+					/*connect to non-active line if the active line is not set to view*/
+					if (get_view_snoop() & CC2_CHANNEL_BIT)
+						LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC2);
+					else
+						LL_UCPD_SetCCPin(UCPD1, LL_UCPD_CCPIN_CC1);
+					view_set_connection(CC2_CHANNEL_BIT);
+					pd_line = 2;
+				}
+				else {
+					view_set_connection(0);
 				}
 			}
+			if (sm->packet.header.sequence % 10 < 8){
+				sm->packet.header.vbus_voltage = vbus_v;
+				sm->packet.header.vbus_current = vbus_c;
+				sm->packet.header.cc1_voltage = cc1_v;
+				sm->packet.header.cc2_voltage = cc2_v;
+				sm->packet.header.vcon_current = vcon_c;
 
-			crc32_init();
-			crc32_hash((uint8_t *)&sm->packet, 508);
-			sm->packet.crc = crc32_result();
-			if (sm->empty_print || sm->packet.header.data_len != 0) {
-				int stop_timer = 0;
-				for (int i = 0, w = 0; i < PACKET_BYTE_SIZE; i += w) {
-					w = uart_fifo_fill(sm->dev, (const uint8_t *)&sm->packet + i, PACKET_BYTE_SIZE - i);
-					if (w <= 0) {
-						stop_timer++;
-						k_usleep(500);
-//						LOG_ERR("ERROR: No receiver connected. Twinkie turning off.");
-						if (stop_timer > 100 && sm->auto_stop)
-						{
-							start_snooper(false);
-							break;
+				/* put pd message in the packet if any are stored */
+				if (sm->mw != sm->mr) {
+					sm->packet.header.packet_type = sm->sop[sm->mr];
+					sm->packet.header.data_len = sm->mod_size[sm->mr];
+					memcpy(sm->packet.data, sm->mod_buff[sm->mr], sm->mod_size[sm->mr]);
+					memset((uint8_t *)&sm->sop[sm->mr], 0, sizeof(uint16_t));
+					sm->mod_size[sm->mr] = 0;
+					memset(sm->mod_buff[sm->mr], 0, PD_SAMPLES);
+					sm->mr++;
+					if (sm->mr == MOD_BUFFERS) {
+						sm->mr = 0;
+					}
+				}
+
+				crc32_init();
+				crc32_hash((uint8_t *)&sm->packet, 508);
+				sm->packet.crc = crc32_result();
+				if (sm->empty_print || sm->packet.header.data_len != 0) {
+					int stop_timer = 0;
+					for (int i = 0, w = 0; i < PACKET_BYTE_SIZE; i += w) {
+						w = uart_fifo_fill(sm->dev, (const uint8_t *)&sm->packet + i, PACKET_BYTE_SIZE - i);
+						if (w <= 0) {
+							stop_timer++;
+							k_usleep(500);
+	//						LOG_ERR("ERROR: No receiver connected. Twinkie turning off.");
+							if (stop_timer > 100 && sm->auto_stop)
+							{
+								start_snooper(false);
+								break;
+							}
 						}
 					}
 				}
+				memset(sm->packet.data, 0, PD_SAMPLES);
+				sm->packet.header.data_len = 0;
 			}
-			memset(sm->packet.data, 0, PD_SAMPLES);
-			sm->packet.header.data_len = 0;
 		}
-		if (sm->mw == sm->mr && sm->slow_print)
+		if (sm->mw == sm->mr)
 		{
-			k_usleep(100000);
+			k_usleep(sm->sleep_time);
 		}
-		else
-		{
-			k_usleep(500);
-		}
-
 	}
 }
 
@@ -463,7 +463,8 @@ int model_init(const struct device *dev)
 
 	set_auto_stop(true);
 	set_empty_print(true);
-	set_slow_print(false);
+	set_sleep_time(500);
+
 
 	//crc32_init();
 

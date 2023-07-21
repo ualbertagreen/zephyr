@@ -46,7 +46,7 @@ int meas_vbus_v(int32_t *v)
 		return ret;
 	}
 
-	*v = (*v + 10) * 1.22;
+	*v = *v * 1.22;
 
 	/* voltage scaled by voltage divider values using DT binding */
 	*v = *v * DT_PROP(VBUS_V_MEAS_NODE, full_ohms) / DT_PROP(VBUS_V_MEAS_NODE, output_ohms);
@@ -78,8 +78,6 @@ int meas_vbus_c(int32_t *c)
 	if (ret != 0) {
 		return ret;
 	}
-
-	*c = *c + 15;
 
 	/* multiplies by 1000 before dividing by shunt resistance
 	 * in milliohms to keep everything as an integer.

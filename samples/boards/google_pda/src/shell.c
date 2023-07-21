@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <stdlib.h>
 #include <zephyr/kernel.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/device.h>
@@ -68,7 +69,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char**argv) {
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Twinkie version 2.1.9");
+	shell_print(shell, "Twinkie version 2.2.0");
 
 	return 0;
 }
@@ -171,25 +172,15 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_rpull,
 SHELL_CMD_REGISTER(rpull, &sub_rpull, "Place pull resistor", NULL);
 
 static int cmd_output(const struct shell *shell, size_t argc, char**argv, void* data) {
-	int p = (int) data;
+	bool p = (int) data;
 
-	switch (p) {
-		case 0:
-		case 1:
-			set_slow_print(false);
-			set_empty_print(p);
-			break;
-		case 2:
-			set_slow_print(true);
-			set_empty_print(true);
-			break;
-		}
+	set_empty_print(p);
 
 	return 0;
 }
 
 SHELL_SUBCMD_DICT_SET_CREATE(output_options, cmd_output,
-        (cont, 1, "continuous output"), (pd_only, 0, "output only on receiving pd messages"), (slow, 2, "slow output when no pd messages are recieved")
+        (cont, true, "continuous output"), (pd_only, false, "output only on receiving pd messages")
 );
 
 SHELL_CMD_REGISTER(output, &output_options, "Sets console output as continuous or only on receiving PD messages", cmd_output);
@@ -207,3 +198,13 @@ SHELL_SUBCMD_DICT_SET_CREATE(cmd_auto_stop_options, cmd_auto_stop,
 );
 
 SHELL_CMD_REGISTER(auto_stop, &cmd_auto_stop_options, "Sets to automatically turn off when no valid receiver is connected", cmd_auto_stop);
+
+static int cmd_sleep_time(const struct shell *shell, size_t argc, char**argv, void* data) {
+	if (argc == 2) {
+		set_sleep_time(atoi(argv[1]));
+	}
+
+	return 0;
+}
+
+SHELL_CMD_REGISTER(sleep_time, NULL, "Sets console output as continuous or only on receiving PD messages", cmd_sleep_time);
